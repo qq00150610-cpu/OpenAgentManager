@@ -15,13 +15,24 @@ import com.openagent.feature.openclaw.viewmodel.OpenClawViewModel
 import com.openagent.feature.openhermes.ui.*
 import com.openagent.feature.openhermes.viewmodel.HermesViewModel
 
+/**
+ * 仪表盘 - 主页
+ *
+ * 布局结构（从上到下）:
+ * 1. OpenClaw 连接卡片
+ * 2. Hermes 连接卡片
+ * 3. OpenClaw 统计网格 (2x2)
+ * 4. Hermes 统计卡片 (1x3)
+ * 5. 快捷操作栏
+ * 6. 实时日志查看器
+ */
 @Composable
 fun DashboardScreen(
     openClawVm: OpenClawViewModel = hiltViewModel(),
     hermesVm: HermesViewModel = hiltViewModel()
 ) {
-    val openClawState by openClawVm.uiState.collectAsState()
-    val hermesState by hermesVm.uiState.collectAsState()
+    val ocState by openClawVm.uiState.collectAsState()
+    val hmState by hermesVm.uiState.collectAsState()
 
     var gatewayUrl by remember { mutableStateOf("") }
     var gatewayToken by remember { mutableStateOf("") }
@@ -35,11 +46,11 @@ fun DashboardScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Connection Cards
+        // ── 连接管理 ─────────────────────
         SectionHeader("连接管理")
 
         OpenClawConnectionCard(
-            connectionState = openClawState.connectionState,
+            connectionState = ocState.connectionState,
             gatewayUrl = gatewayUrl,
             onUrlChange = { gatewayUrl = it },
             token = gatewayToken,
@@ -49,8 +60,8 @@ fun DashboardScreen(
         )
 
         HermesConnectionCard(
-            isConnected = hermesState.isConnected,
-            isConnecting = hermesState.isConnecting,
+            isConnected = hmState.isConnected,
+            isConnecting = hmState.isConnecting,
             serverUrl = hermesUrl,
             onUrlChange = { hermesUrl = it },
             apiKey = hermesApiKey,
@@ -64,22 +75,23 @@ fun DashboardScreen(
             onDisconnect = { hermesVm.disconnect() }
         )
 
-        // Stats
+        // ── OpenClaw 统计 ────────────────
         SectionHeader("OpenClaw 统计")
         OpenClawStatsGrid(
-            activeSessions = openClawState.activeSessions,
+            activeSessions = ocState.activeSessions,
             messageThroughput = 0L,
-            gatewayLatency = openClawState.gatewayLatency,
-            connectedChannels = openClawState.channels.size
+            gatewayLatency = ocState.gatewayLatency,
+            connectedChannels = ocState.channels.size
         )
 
+        // ── Hermes 统计 ──────────────────
         SectionHeader("Hermes 统计")
         HermesStatsCards(
-            usageStats = hermesState.usageStats,
-            activeSessions = hermesState.sessions.size
+            usageStats = hmState.usageStats,
+            activeSessions = hmState.sessions.size
         )
 
-        // Quick Actions
+        // ── 快捷操作 ─────────────────────
         SectionHeader("快捷操作")
         QuickActions(
             onStartAgent = {},
@@ -87,13 +99,10 @@ fun DashboardScreen(
             onHealthCheck = {}
         )
 
-        // Logs
+        // ── 实时日志 ─────────────────────
         SectionHeader("实时日志")
-        LogViewer(
-            logs = openClawState.logs,
-            modifier = Modifier.fillMaxWidth()
-        )
+        LogViewer(logs = ocState.logs)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
     }
 }

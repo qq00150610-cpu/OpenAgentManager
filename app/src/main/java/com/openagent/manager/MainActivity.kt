@@ -7,10 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Hub
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -36,11 +33,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// ── 底部导航项 ───────────────────────────
+
 data class BottomNavItem(
     val label: String,
     val icon: ImageVector,
     val route: Any
 )
+
+// ── 主界面：TopBar + NavHost + BottomBar ──
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-    val bottomNavItems = listOf(
+    val items = listOf(
         BottomNavItem("仪表盘", Icons.Default.Dashboard, Screen.Dashboard),
         BottomNavItem("Agents", Icons.Default.Hub, Screen.Agents),
         BottomNavItem("编辑器", Icons.Default.Code, Screen.Editor),
@@ -56,7 +57,7 @@ fun MainScreen() {
     )
 
     val currentRoute = navBackStackEntry?.destination
-    val currentTitle = bottomNavItems.find { item ->
+    val currentTitle = items.find { item ->
         currentRoute?.hasRoute(item.route::class) == true
     }?.label ?: "OpenAgent"
 
@@ -73,7 +74,7 @@ fun MainScreen() {
         },
         bottomBar = {
             NavigationBar {
-                bottomNavItems.forEach { item ->
+                items.forEach { item ->
                     NavigationBarItem(
                         icon = { Icon(item.icon, contentDescription = item.label) },
                         label = { Text(item.label) },

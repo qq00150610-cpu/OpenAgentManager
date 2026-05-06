@@ -2,11 +2,18 @@ package com.openagent.core.network.hermes
 
 import com.openagent.core.model.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Hermes Repository - 封装 REST API 通信
+ *
+ * 提供:
+ * - 连接配置与测试
+ * - 模型管理
+ * - 聊天请求
+ * - 会话与用量查询
+ */
 @Singleton
 class HermesRepository @Inject constructor(
     private val apiClient: HermesApiClient

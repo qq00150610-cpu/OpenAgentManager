@@ -13,8 +13,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.openagent.core.ui.components.DetailRow
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * 设置页面
+ *
+ * 布局结构（从上到下）:
+ * 1. API 连接配置（OpenClaw + Hermes）
+ * 2. 自动发现（QR 码 + mDNS）
+ * 3. 主题与显示（深色模式、语言）
+ * 4. 安全设置（生物识别、加密）
+ * 5. 本地存储管理
+ * 6. 关于
+ */
 @Composable
 fun SettingsScreen() {
     var gatewayUrl by remember { mutableStateOf("") }
@@ -22,9 +33,9 @@ fun SettingsScreen() {
     var hermesUrl by remember { mutableStateOf("") }
     var hermesApiKey by remember { mutableStateOf("") }
     var isDarkMode by remember { mutableStateOf(false) }
-    var isBiometricEnabled by remember { mutableStateOf(false) }
-    var isEncryptionEnabled by remember { mutableStateOf(false) }
-    var selectedLanguage by remember { mutableStateOf("中文") }
+    var isBiometric by remember { mutableStateOf(false) }
+    var isEncryption by remember { mutableStateOf(false) }
+    var language by remember { mutableStateOf("中文") }
 
     Column(
         modifier = Modifier
@@ -33,202 +44,117 @@ fun SettingsScreen() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // API Connection Config
-        SettingsSection(title = "API 连接配置", icon = Icons.Default.Cloud) {
-            OutlinedTextField(
-                value = gatewayUrl,
-                onValueChange = { gatewayUrl = it },
-                label = { Text("OpenClaw Gateway URL") },
-                placeholder = { Text("wss://your-gateway.com") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = gatewayToken,
-                onValueChange = { gatewayToken = it },
-                label = { Text("Gateway 认证 Token") },
-                placeholder = { Text("输入认证令牌") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = hermesUrl,
-                onValueChange = { hermesUrl = it },
-                label = { Text("Hermes Agent 后端地址") },
-                placeholder = { Text("http://localhost:8080") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = hermesApiKey,
-                onValueChange = { hermesApiKey = it },
-                label = { Text("Hermes API Key") },
-                placeholder = { Text("输入 API Key") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { /* Test OpenClaw connection */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.WifiFind, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("测试 OpenClaw")
+        // ── API 连接配置 ─────────────────
+        SettingsSection("API 连接配置", Icons.Default.Cloud) {
+            OutlinedTextField(gatewayUrl, { gatewayUrl = it },
+                label = { Text("OpenClaw Gateway URL") }, placeholder = { Text("wss://your-gateway.com") },
+                modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(gatewayToken, { gatewayToken = it },
+                label = { Text("Gateway 认证 Token") }, placeholder = { Text("输入认证令牌") },
+                modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(hermesUrl, { hermesUrl = it },
+                label = { Text("Hermes Agent 后端地址") }, placeholder = { Text("http://localhost:8080") },
+                modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(hermesApiKey, { hermesApiKey = it },
+                label = { Text("Hermes API Key") }, placeholder = { Text("输入 API Key") },
+                modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {}, Modifier.weight(1f)) {
+                    Icon(Icons.Default.WifiFind, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("测试 OpenClaw")
                 }
-                OutlinedButton(
-                    onClick = { /* Test Hermes connection */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.WifiFind, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("测试 Hermes")
+                OutlinedButton(onClick = {}, Modifier.weight(1f)) {
+                    Icon(Icons.Default.WifiFind, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("测试 Hermes")
                 }
             }
         }
 
-        // Auto Discovery
-        SettingsSection(title = "自动发现", icon = Icons.Default.QrCodeScanner) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { /* QR scan */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.QrCode, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("扫描 QR 码")
+        // ── 自动发现 ─────────────────────
+        SettingsSection("自动发现", Icons.Default.QrCodeScanner) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {}, Modifier.weight(1f)) {
+                    Icon(Icons.Default.QrCode, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("扫描 QR 码")
                 }
-                OutlinedButton(
-                    onClick = { /* mDNS */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Dns, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("mDNS 发现")
+                OutlinedButton(onClick = {}, Modifier.weight(1f)) {
+                    Icon(Icons.Default.Dns, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("mDNS 发现")
                 }
             }
         }
 
-        // Theme & Display
-        SettingsSection(title = "主题与显示", icon = Icons.Default.Palette) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+        // ── 主题与显示 ───────────────────
+        SettingsSection("主题与显示", Icons.Default.Palette) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("深色模式", style = MaterialTheme.typography.bodyLarge)
                 Switch(checked = isDarkMode, onCheckedChange = { isDarkMode = it })
             }
-
-            var langExpanded by remember { mutableStateOf(false) }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            var langExp by remember { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("语言", style = MaterialTheme.typography.bodyLarge)
-                ExposedDropdownMenuBox(
-                    expanded = langExpanded,
-                    onExpandedChange = { langExpanded = !langExpanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedLanguage,
-                        onValueChange = {},
-                        readOnly = true,
-                        modifier = Modifier.menuAnchor().width(120.dp),
-                        textStyle = MaterialTheme.typography.bodyMedium
-                    )
-                    ExposedDropdownMenu(expanded = langExpanded, onDismissRequest = { langExpanded = false }) {
-                        DropdownMenuItem(text = { Text("中文") }, onClick = { selectedLanguage = "中文"; langExpanded = false })
-                        DropdownMenuItem(text = { Text("English") }, onClick = { selectedLanguage = "English"; langExpanded = false })
+                ExposedDropdownMenuBox(expanded = langExp, onExpandedChange = { langExp = !langExp }) {
+                    OutlinedTextField(language, {}, readOnly = true, modifier = Modifier.menuAnchor().width(120.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium)
+                    ExposedDropdownMenu(expanded = langExp, onDismissRequest = { langExp = false }) {
+                        DropdownMenuItem(text = { Text("中文") }, onClick = { language = "中文"; langExp = false })
+                        DropdownMenuItem(text = { Text("English") }, onClick = { language = "English"; langExp = false })
                     }
                 }
             }
         }
 
-        // Security
-        SettingsSection(title = "安全设置", icon = Icons.Default.Security) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+        // ── 安全设置 ─────────────────────
+        SettingsSection("安全设置", Icons.Default.Security) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("生物识别锁", style = MaterialTheme.typography.bodyLarge)
                     Text("指纹/面部解锁", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Switch(checked = isBiometricEnabled, onCheckedChange = { isBiometricEnabled = it })
+                Switch(checked = isBiometric, onCheckedChange = { isBiometric = it })
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("数据加密", style = MaterialTheme.typography.bodyLarge)
                     Text("加密本地存储数据", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Switch(checked = isEncryptionEnabled, onCheckedChange = { isEncryptionEnabled = it })
+                Switch(checked = isEncryption, onCheckedChange = { isEncryption = it })
             }
         }
 
-        // Storage
-        SettingsSection(title = "本地存储", icon = Icons.Default.Storage) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { /* Clear cache */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.CleaningServices, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("清除缓存")
+        // ── 本地存储 ─────────────────────
+        SettingsSection("本地存储", Icons.Default.Storage) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {}, Modifier.weight(1f)) {
+                    Icon(Icons.Default.CleaningServices, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("清除缓存")
                 }
-                OutlinedButton(
-                    onClick = { /* Clear all */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("清除所有数据")
+                OutlinedButton(onClick = {}, Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
+                    Icon(Icons.Default.DeleteForever, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("清除所有数据")
                 }
             }
         }
 
-        // About
-        SettingsSection(title = "关于", icon = Icons.Default.Info) {
+        // ── 关于 ─────────────────────────
+        SettingsSection("关于", Icons.Default.Info) {
             DetailRow("版本", "1.0.0")
             DetailRow("构建号", "1")
             DetailRow("开源许可", "MIT License")
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = { /* Show licenses */ },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("依赖库列表")
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = {}, Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Description, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("依赖库列表")
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
     }
 }
+
+// ── 设置区块卡片 ─────────────────────────
 
 @Composable
 private fun SettingsSection(
@@ -236,31 +162,15 @@ private fun SettingsSection(
     icon: ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.width(8.dp))
+                Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
             content()
         }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
 }

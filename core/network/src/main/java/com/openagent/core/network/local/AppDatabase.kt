@@ -31,29 +31,9 @@ interface ScriptDao {
 
     @Delete
     suspend fun deleteScript(script: ScriptEntity)
-
-    @Query("DELETE FROM scripts WHERE id = :id")
-    suspend fun deleteScriptById(id: String)
 }
 
 @Database(entities = [ScriptEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun scriptDao(): ScriptDao
-
-    companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-
-        fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "openagent_database"
-                ).build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
 }

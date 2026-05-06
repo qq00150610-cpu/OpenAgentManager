@@ -15,17 +15,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.openagent.core.model.AgentStatus
 import com.openagent.core.model.AgentType
+import com.openagent.core.ui.theme.*
+
+// ═══════════════════════════════════════════
+//  状态指示器
+// ═══════════════════════════════════════════
 
 @Composable
 fun StatusIndicator(status: AgentStatus, modifier: Modifier = Modifier) {
     val color = when (status) {
-        AgentStatus.ONLINE -> Color(0xFF4CAF50)
-        AgentStatus.OFFLINE -> Color(0xFF9E9E9E)
-        AgentStatus.BUSY -> Color(0xFFFF9800)
-        AgentStatus.ERROR -> Color(0xFFF44336)
+        AgentStatus.ONLINE -> StatusGreen
+        AgentStatus.OFFLINE -> StatusGray
+        AgentStatus.BUSY -> StatusOrange
+        AgentStatus.ERROR -> StatusRed
     }
     val animatedColor = animateColorAsState(targetValue = color, label = "status")
-
     Box(
         modifier = modifier
             .size(12.dp)
@@ -34,13 +38,16 @@ fun StatusIndicator(status: AgentStatus, modifier: Modifier = Modifier) {
     )
 }
 
+// ═══════════════════════════════════════════
+//  Agent 类型标签
+// ═══════════════════════════════════════════
+
 @Composable
 fun AgentTypeChip(type: AgentType, modifier: Modifier = Modifier) {
     val (label, color) = when (type) {
-        AgentType.OPENCLAW -> "OpenClaw" to Color(0xFF1976D2)
-        AgentType.OPENHERMES -> "Hermes" to Color(0xFF7B1FA2)
+        AgentType.OPENCLAW -> "OpenClaw" to OpenClawBlue
+        AgentType.OPENHERMES -> "Hermes" to HermesPurple
     }
-
     SuggestionChip(
         onClick = {},
         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
@@ -51,6 +58,10 @@ fun AgentTypeChip(type: AgentType, modifier: Modifier = Modifier) {
         )
     )
 }
+
+// ═══════════════════════════════════════════
+//  统计卡片
+// ═══════════════════════════════════════════
 
 @Composable
 fun StatCard(
@@ -65,9 +76,7 @@ fun StatCard(
         colors = CardDefaults.cardColors(containerColor = containerColor),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
@@ -92,6 +101,10 @@ fun StatCard(
     }
 }
 
+// ═══════════════════════════════════════════
+//  区域标题
+// ═══════════════════════════════════════════
+
 @Composable
 fun SectionHeader(
     title: String,
@@ -114,6 +127,10 @@ fun SectionHeader(
     }
 }
 
+// ═══════════════════════════════════════════
+//  日志条目
+// ═══════════════════════════════════════════
+
 @Composable
 fun LogItem(
     level: String,
@@ -123,10 +140,10 @@ fun LogItem(
     modifier: Modifier = Modifier
 ) {
     val levelColor = when (level) {
-        "ERROR" -> Color(0xFFF44336)
-        "WARN" -> Color(0xFFFF9800)
-        "INFO" -> Color(0xFF4CAF50)
-        else -> Color(0xFF9E9E9E)
+        "ERROR" -> StatusRed
+        "WARN" -> StatusOrange
+        "INFO" -> StatusGreen
+        else -> StatusGray
     }
 
     Row(
@@ -159,6 +176,35 @@ fun LogItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+// ═══════════════════════════════════════════
+//  详情行 (设置页/详情页通用)
+// ═══════════════════════════════════════════
+
+@Composable
+fun DetailRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
         )
     }
 }

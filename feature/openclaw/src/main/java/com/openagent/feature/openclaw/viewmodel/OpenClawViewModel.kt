@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * OpenClaw UI 状态
+ */
 data class OpenClawUiState(
     val connectionState: ConnectionStatus = ConnectionStatus.DISCONNECTED,
     val agents: List<AgentInfo> = emptyList(),
@@ -29,16 +32,26 @@ class OpenClawViewModel @Inject constructor(
     val uiState: StateFlow<OpenClawUiState> = _uiState.asStateFlow()
 
     init {
+        // 监听连接状态
         viewModelScope.launch {
             repository.connectionState.collect { state ->
-                _uiState.update { it.copy(connectionState = state, isConnecting = state == ConnectionStatus.CONNECTING) }
+                _uiState.update {
+                    it.copy(
+                        connectionState = state,
+                        isConnecting = state == ConnectionStatus.CONNECTING
+                    )
+                }
             }
         }
+        // 监听日志流（最多保留 500 条）
         viewModelScope.launch {
             repository.logs.collect { log ->
-                _uiState.update { it.copy(logs = (it.logs + log).takeLast(500)) }
+                _uiState.update {
+                    it.copy(logs = (it.logs + log).takeLast(500))
+                }
             }
         }
+        // 监听事件流
         viewModelScope.launch {
             repository.events.collect { event ->
                 handleEvent(event)
@@ -64,15 +77,11 @@ class OpenClawViewModel @Inject constructor(
     }
 
     fun refreshAgents() {
-        viewModelScope.launch {
-            repository.getAgents()
-        }
+        viewModelScope.launch { repository.getAgents() }
     }
 
     fun refreshChannels() {
-        viewModelScope.launch {
-            repository.getChannels()
-        }
+        viewModelScope.launch { repository.getChannels() }
     }
 
     fun sendInstruction(agentId: String, instruction: String) {

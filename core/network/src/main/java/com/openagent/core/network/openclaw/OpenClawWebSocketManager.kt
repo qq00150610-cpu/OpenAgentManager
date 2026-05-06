@@ -1,13 +1,9 @@
 package com.openagent.core.network.openclaw
 
 import com.openagent.core.model.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
@@ -17,16 +13,21 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// ═══════════════════════════════════════════
+//  OpenClaw Gateway WebSocket 协议实现
+//  参考: src/gateway/protocol/schema/frames.ts
+// ═══════════════════════════════════════════
+
 @Serializable
-data class ConnectRequest(
+private data class ConnectRequest(
     val type: String = "req",
-    val id: String = UUID.randomUUID().toString(),
+    val id: String,
     val method: String = "connect",
     val params: ConnectParams
 )
 
 @Serializable
-data class ConnectParams(
+private data class ConnectParams(
     val minProtocol: Int = 3,
     val maxProtocol: Int = 3,
     val client: ClientInfo,
@@ -41,19 +42,16 @@ data class ConnectParams(
     val device: DeviceInfo
 )
 
-@Serializable
-data class ClientInfo(
+@Serializable private data class ClientInfo(
     val id: String = "android-manager",
     val version: String = "1.0.0",
     val platform: String = "android",
     val mode: String = "operator"
 )
 
-@Serializable
-data class AuthInfo(val token: String)
+@Serializable private data class AuthInfo(val token: String)
 
-@Serializable
-data class DeviceInfo(
+@Serializable private data class DeviceInfo(
     val id: String,
     val publicKey: String = "",
     val signature: String = "",
@@ -62,15 +60,26 @@ data class DeviceInfo(
 )
 
 @Serializable
-data class FrameRequest(
+private data class FrameRequest(
     val type: String = "req",
-    val id: String = UUID.randomUUID().toString(),
+    val id: String,
     val method: String,
     val params: JsonObject? = null
 )
 
+/**
+ * OpenClaw Gateway WebSocket 连接管理器
+ *
+ * 协议特性:
+ * - JSON 文本帧传输
+ * - 首帧必须是 connect 请求
+ * - 握手后遵循 hello-ok.policy.maxPayload 限制
+ * - 自动重连（指数退避，最大 30s）
+ * - 心跳保活（15s 间隔）
+ */
 @Singleton
 class OpenClawWebSocketManager @Inject constructor() {
+
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     private var webSocket: WebSocket? = null
@@ -81,19 +90,18 @@ class OpenClawWebSocketManager @Inject constructor() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // ── 状态流 ──────────────────────────────
     private val _connectionState = MutableStateFlow(ConnectionStatus.DISCONNECTED)
     val connectionState: StateFlow<ConnectionStatus> = _connectionState.asStateFlow()
 
     private val _events = MutableSharedFlow<WebSocketEvent>(
-        replay = 1,
-        extraBufferCapacity = 64,
+        replay = 1, extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val events: SharedFlow<WebSocketEvent> = _events.asSharedFlow()
 
     private val _logs = MutableSharedFlow<LogEntry>(
-        replay = 50,
-        extraBufferCapacity = 200,
+        replay = 50, extraBufferCapacity = 200,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val logs: SharedFlow<LogEntry> = _logs.asSharedFlow()
@@ -101,6 +109,8 @@ class OpenClawWebSocketManager @Inject constructor() {
     private var reconnectAttempt = 0
     private var gatewayUrl = ""
     private var authToken = ""
+
+    // ── 公开 API ─────────────────────────────
 
     fun connect(url: String, token: String) {
         gatewayUrl = url
@@ -110,8 +120,25 @@ class OpenClawWebSocketManager @Inject constructor() {
         doConnect()
     }
 
+    fun disconnect() {
+        webSocket?.close(1000, "User disconnect")
+        webSocket = null
+        _connectionState.value = ConnectionStatus.DISCONNECTED
+    }
+
+    fun send(method: String, params: JsonObject? = null): String {
+        val id = UUID.randomUUID().toString()
+        val frame = FrameRequest(id = id, method = method, params = params)
+        webSocket?.send(json.encodeToString(frame))
+        return id
+    }
+
+    // ── 内部实现 ─────────────────────────────
+
     private fun doConnect() {
-        val wsUrl = gatewayUrl.replace("http://", "ws://").replace("https://", "wss://")
+        val wsUrl = gatewayUrl
+            .replace("http://", "ws://")
+            .replace("https://", "wss://")
         val fullUrl = if (wsUrl.endsWith("/gateway")) wsUrl else "$wsUrl/gateway"
 
         val request = Request.Builder().url(fullUrl).build()
@@ -140,13 +167,10 @@ class OpenClawWebSocketManager @Inject constructor() {
 
     private fun sendConnectRequest(ws: WebSocket) {
         val connectReq = ConnectRequest(
+            id = UUID.randomUUID().toString(),
             params = ConnectParams(
                 auth = AuthInfo(token = authToken),
-                device = DeviceInfo(
-                    id = UUID.randomUUID().toString(),
-                    publicKey = "",
-                    signature = ""
-                )
+                device = DeviceInfo(id = UUID.randomUUID().toString())
             )
         )
         ws.send(json.encodeToString(connectReq))
@@ -155,9 +179,7 @@ class OpenClawWebSocketManager @Inject constructor() {
     private suspend fun handleMessage(text: String) {
         try {
             val jsonObj = json.parseToJsonElement(text).jsonObject
-            val type = jsonObj["type"]?.jsonPrimitive?.content
-
-            when (type) {
+            when (jsonObj["type"]?.jsonPrimitive?.content) {
                 "res" -> {
                     val ok = jsonObj["ok"]?.jsonPrimitive?.booleanOrNull
                     if (ok == true) {
@@ -184,7 +206,8 @@ class OpenClawWebSocketManager @Inject constructor() {
 
     private fun scheduleReconnect() {
         scope.launch {
-            val delayMs = (1000L * (1 shl reconnectAttempt.coerceAtMost(5))).coerceAtMost(30_000L)
+            val delayMs = (1000L * (1 shl reconnectAttempt.coerceAtMost(5)))
+                .coerceAtMost(30_000L)
             reconnectAttempt++
             emitLog(LogLevel.INFO, "Reconnect", "将在 ${delayMs}ms 后重连 (第${reconnectAttempt}次)")
             delay(delayMs)
@@ -193,18 +216,6 @@ class OpenClawWebSocketManager @Inject constructor() {
                 doConnect()
             }
         }
-    }
-
-    fun send(method: String, params: JsonObject? = null): String {
-        val id = UUID.randomUUID().toString()
-        val frame = FrameRequest(id = id, method = method, params = params)
-        webSocket?.send(json.encodeToString(frame))
-        return id
-    }
-
-    fun disconnect() {
-        webSocket?.close(1000, "User disconnect")
-        _connectionState.value = ConnectionStatus.DISCONNECTED
     }
 
     private suspend fun emitLog(level: LogLevel, tag: String, message: String) {

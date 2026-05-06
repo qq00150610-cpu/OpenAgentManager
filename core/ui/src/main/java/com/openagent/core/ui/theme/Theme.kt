@@ -8,50 +8,56 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 // OpenClaw 蓝色系
-private val OpenClawPrimary = Color(0xFF1976D2)
-private val OpenClawPrimaryDark = Color(0xFF0D47A1)
-private val OpenClawSecondary = Color(0xFF42A5F5)
+val OpenClawBlue = Color(0xFF1976D2)
+val OpenClawBlueDark = Color(0xFF0D47A1)
+val OpenClawBlueLight = Color(0xFF42A5F5)
 
 // Hermes 紫色系
-private val HermesPrimary = Color(0xFF7B1FA2)
-private val HermesPrimaryDark = Color(0xFF4A148C)
-private val HermesSecondary = Color(0xFFAB47BC)
+val HermesPurple = Color(0xFF7B1FA2)
+val HermesPurpleDark = Color(0xFF4A148C)
+val HermesPurpleLight = Color(0xFFAB47BC)
+
+// 状态色
+val StatusGreen = Color(0xFF4CAF50)
+val StatusRed = Color(0xFFF44336)
+val StatusOrange = Color(0xFFFF9800)
+val StatusGray = Color(0xFF9E9E9E)
 
 private val LightColorScheme = lightColorScheme(
-    primary = OpenClawPrimary,
+    primary = OpenClawBlue,
     onPrimary = Color.White,
     primaryContainer = Color(0xFFBBDEFB),
-    onPrimaryContainer = Color(0xFF0D47A1),
-    secondary = OpenClawSecondary,
+    onPrimaryContainer = OpenClawBlueDark,
+    secondary = OpenClawBlueLight,
     onSecondary = Color.White,
     secondaryContainer = Color(0xFFE3F2FD),
     onSecondaryContainer = Color(0xFF1565C0),
-    tertiary = HermesPrimary,
+    tertiary = HermesPurple,
     onTertiary = Color.White,
     tertiaryContainer = Color(0xFFE1BEE7),
-    onTertiaryContainer = Color(0xFF4A148C),
+    onTertiaryContainer = HermesPurpleDark,
     background = Color(0xFFFAFAFA),
     onBackground = Color(0xFF1C1B1F),
     surface = Color.White,
     onSurface = Color(0xFF1C1B1F),
     surfaceVariant = Color(0xFFF5F5F5),
     onSurfaceVariant = Color(0xFF49454F),
-    error = Color(0xFFD32F2F),
+    error = StatusRed,
     onError = Color.White
 )
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF90CAF9),
-    onPrimary = Color(0xFF0D47A1),
+    onPrimary = OpenClawBlueDark,
     primaryContainer = Color(0xFF1565C0),
     onPrimaryContainer = Color(0xFFBBDEFB),
     secondary = Color(0xFF64B5F6),
-    onSecondary = Color(0xFF0D47A1),
-    secondaryContainer = Color(0xFF1976D2),
+    onSecondary = OpenClawBlueDark,
+    secondaryContainer = OpenClawBlue,
     onSecondaryContainer = Color(0xFFE3F2FD),
     tertiary = Color(0xFFCE93D8),
-    onTertiary = Color(0xFF4A148C),
-    tertiaryContainer = Color(0xFF7B1FA2),
+    onTertiary = HermesPurpleDark,
+    tertiaryContainer = HermesPurple,
     onTertiaryContainer = Color(0xFFE1BEE7),
     background = Color(0xFF121212),
     onBackground = Color(0xFFE6E1E5),

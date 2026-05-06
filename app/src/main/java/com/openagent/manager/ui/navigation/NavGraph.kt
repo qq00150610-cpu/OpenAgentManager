@@ -11,12 +11,16 @@ import com.openagent.manager.ui.editor.EditorScreen
 import com.openagent.manager.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 
+// ── 路由定义 ─────────────────────────────
+
 sealed class Screen {
     @Serializable data object Dashboard
     @Serializable data object Agents
     @Serializable data object Editor
     @Serializable data object Settings
 }
+
+// ── 导航图 ───────────────────────────────
 
 @Composable
 fun AppNavGraph(
@@ -28,17 +32,9 @@ fun AppNavGraph(
         startDestination = Screen.Dashboard,
         modifier = modifier
     ) {
-        composable<Screen.Dashboard> {
-            DashboardScreen()
-        }
-        composable<Screen.Agents> {
-            AgentsScreen()
-        }
-        composable<Screen.Editor> {
-            EditorScreen()
-        }
-        composable<Screen.Settings> {
-            SettingsScreen()
-        }
+        composable<Screen.Dashboard> { DashboardScreen() }
+        composable<Screen.Agents> { AgentsScreen() }
+        composable<Screen.Editor> { EditorScreen() }
+        composable<Screen.Settings> { SettingsScreen() }
     }
 }

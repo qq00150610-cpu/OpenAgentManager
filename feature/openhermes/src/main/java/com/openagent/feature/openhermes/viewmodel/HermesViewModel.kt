@@ -51,8 +51,8 @@ class HermesViewModel @Inject constructor(
     fun loadModels() {
         viewModelScope.launch {
             repository.getModels().fold(
-                onSuccess = { models -> _uiState.update { it.copy(models = models) } },
-                onFailure = { /* ignore */ }
+                onSuccess = { m -> _uiState.update { it.copy(models = m) } },
+                onFailure = { }
             )
         }
     }
@@ -60,8 +60,8 @@ class HermesViewModel @Inject constructor(
     fun loadSessions() {
         viewModelScope.launch {
             repository.getSessions().fold(
-                onSuccess = { sessions -> _uiState.update { it.copy(sessions = sessions) } },
-                onFailure = { /* ignore */ }
+                onSuccess = { s -> _uiState.update { it.copy(sessions = s) } },
+                onFailure = { }
             )
         }
     }
@@ -69,8 +69,8 @@ class HermesViewModel @Inject constructor(
     fun loadUsageStats() {
         viewModelScope.launch {
             repository.getUsageStats().fold(
-                onSuccess = { stats -> _uiState.update { it.copy(usageStats = stats) } },
-                onFailure = { /* ignore */ }
+                onSuccess = { u -> _uiState.update { it.copy(usageStats = u) } },
+                onFailure = { }
             )
         }
     }

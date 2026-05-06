@@ -16,6 +16,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.openagent.core.model.*
 import com.openagent.core.ui.components.*
+import com.openagent.core.ui.theme.*
+
+// ═══════════════════════════════════════════
+//  Hermes 连接卡片
+// ═══════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,25 +43,21 @@ fun HermesConnectionCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // 头部
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    Icons.Default.SmartToy,
-                    contentDescription = null,
-                    tint = Color(0xFF7B1FA2),
-                    modifier = Modifier.size(28.dp)
+                Icon(Icons.Default.SmartToy, null, tint = HermesPurple, modifier = Modifier.size(28.dp))
+                Spacer(Modifier.width(12.dp))
+                Text("Hermes Agent", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                StatusIndicator(
+                    status = if (isConnected) AgentStatus.ONLINE
+                    else if (isConnecting) AgentStatus.BUSY
+                    else AgentStatus.OFFLINE
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    "Hermes Agent",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                StatusIndicator(status = if (isConnected) AgentStatus.ONLINE else if (isConnecting) AgentStatus.BUSY else AgentStatus.OFFLINE)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = if (isConnected) "已连接" else if (isConnecting) "连接中..." else "未连接",
                     style = MaterialTheme.typography.bodySmall,
@@ -64,89 +65,62 @@ fun HermesConnectionCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
-                value = serverUrl,
-                onValueChange = onUrlChange,
+                value = serverUrl, onValueChange = onUrlChange,
                 label = { Text("Hermes 后端地址") },
                 placeholder = { Text("http://localhost:8080") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !isConnected
+                modifier = Modifier.fillMaxWidth(), singleLine = true, enabled = !isConnected
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            Spacer(Modifier.height(8.dp))
             OutlinedTextField(
-                value = apiKey,
-                onValueChange = onApiKeyChange,
+                value = apiKey, onValueChange = onApiKeyChange,
                 label = { Text("API Key") },
                 placeholder = { Text("输入 API Key") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !isConnected
+                modifier = Modifier.fillMaxWidth(), singleLine = true, enabled = !isConnected
             )
+            Spacer(Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // API 模式选择
             var expanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                 OutlinedTextField(
                     value = when (apiMode) {
                         ApiMode.CHAT_COMPLETIONS -> "Chat Completions"
                         ApiMode.CODEX_RESPONSES -> "Codex Responses"
                         ApiMode.ANTHROPIC_MESSAGES -> "Anthropic Messages"
                     },
-                    onValueChange = {},
-                    readOnly = true,
+                    onValueChange = {}, readOnly = true,
                     label = { Text("API 模式") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                     enabled = !isConnected
                 )
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    DropdownMenuItem(
-                        text = { Text("Chat Completions") },
-                        onClick = { onApiModeChange(ApiMode.CHAT_COMPLETIONS); expanded = false }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Codex Responses") },
-                        onClick = { onApiModeChange(ApiMode.CODEX_RESPONSES); expanded = false }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Anthropic Messages") },
-                        onClick = { onApiModeChange(ApiMode.ANTHROPIC_MESSAGES); expanded = false }
-                    )
+                    DropdownMenuItem(text = { Text("Chat Completions") },
+                        onClick = { onApiModeChange(ApiMode.CHAT_COMPLETIONS); expanded = false })
+                    DropdownMenuItem(text = { Text("Codex Responses") },
+                        onClick = { onApiModeChange(ApiMode.CODEX_RESPONSES); expanded = false })
+                    DropdownMenuItem(text = { Text("Anthropic Messages") },
+                        onClick = { onApiModeChange(ApiMode.ANTHROPIC_MESSAGES); expanded = false })
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 if (isConnected) {
-                    Button(
-                        onClick = onDisconnect,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Icon(Icons.Default.LinkOff, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
+                    Button(onClick = onDisconnect, colors = ButtonDefaults.buttonColors(containerColor = StatusRed)) {
+                        Icon(Icons.Default.LinkOff, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
                         Text("断开")
                     }
                 } else {
-                    Button(
-                        onClick = onConnect,
-                        enabled = !isConnecting
-                    ) {
+                    Button(onClick = onConnect, enabled = !isConnecting) {
                         if (isConnecting) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(8.dp))
+                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                            Spacer(Modifier.width(8.dp))
                         }
                         Text("连接")
                     }
@@ -156,6 +130,10 @@ fun HermesConnectionCard(
     }
 }
 
+// ═══════════════════════════════════════════
+//  模型列表
+// ═══════════════════════════════════════════
+
 @Composable
 fun ModelList(
     models: List<ModelInfo>,
@@ -163,23 +141,12 @@ fun ModelList(
     onModelSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
+    Card(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "可用模型",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Text("可用模型", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
             if (models.isEmpty()) {
-                Text(
-                    "暂无可用模型",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("暂无可用模型", color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                     items(models) { model ->
@@ -187,10 +154,7 @@ fun ModelList(
                             headlineContent = { Text(model.name) },
                             supportingContent = { Text(model.provider) },
                             leadingContent = {
-                                RadioButton(
-                                    selected = model.id == selectedModel,
-                                    onClick = { onModelSelect(model.id) }
-                                )
+                                RadioButton(selected = model.id == selectedModel, onClick = { onModelSelect(model.id) })
                             },
                             modifier = Modifier.clickable { onModelSelect(model.id) }
                         )
@@ -201,16 +165,17 @@ fun ModelList(
     }
 }
 
+// ═══════════════════════════════════════════
+//  Hermes 统计卡片（水平排列）
+// ═══════════════════════════════════════════
+
 @Composable
 fun HermesStatsCards(
     usageStats: UsageStats,
     activeSessions: Int,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         StatCard(
             title = "Token 消耗",
             value = formatTokenCount(usageStats.totalTokens),
@@ -232,10 +197,8 @@ fun HermesStatsCards(
     }
 }
 
-private fun formatTokenCount(count: Long): String {
-    return when {
-        count >= 1_000_000 -> "${String.format("%.1f", count / 1_000_000.0)}M"
-        count >= 1_000 -> "${String.format("%.1f", count / 1_000.0)}K"
-        else -> "$count"
-    }
+private fun formatTokenCount(count: Long): String = when {
+    count >= 1_000_000 -> "${String.format("%.1f", count / 1_000_000.0)}M"
+    count >= 1_000 -> "${String.format("%.1f", count / 1_000.0)}K"
+    else -> "$count"
 }
