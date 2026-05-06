@@ -74,6 +74,8 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.datastore.preferences)
     implementation(libs.serialization.json)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
 
     debugImplementation(libs.androidx.ui.tooling)
 }
