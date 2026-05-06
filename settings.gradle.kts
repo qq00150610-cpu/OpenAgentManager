@@ -5,8 +5,10 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-dependencyResolution {
-    @Suppress("UnstableApiUsage")
+
+@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -14,6 +16,7 @@ dependencyResolution {
 }
 
 rootProject.name = "OpenAgentManager"
+
 include(":app")
 include(":core:network")
 include(":core:model")
