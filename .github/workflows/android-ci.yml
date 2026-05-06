@@ -44,7 +44,7 @@ jobs:
       - name: Build All APKs (Debug + Release)
         run: ./gradlew assembleDebug assembleRelease --no-daemon --stacktrace
 
-      - name: Upload Debug APK
+      - name: Upload Debug APK (Artifact)
         uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -52,7 +52,7 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
 
-      - name: Upload Release APK
+      - name: Upload Release APK (Artifact)
         uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -67,3 +67,55 @@ jobs:
           name: build-logs
           path: app/build/reports/
           retention-days: 7
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          echo "tag=v$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Download Debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: openagent-manager-debug
+          path: apks/
+
+      - name: Download Release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: openagent-manager-release
+          path: apks/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "Build ${{ steps.tag.outputs.tag }}"
+          body: |
+            ## OpenAgent Manager 自动构建
+
+            ### 构建信息
+            - **提交**: ${{ github.sha }}
+            - **日期**: ${{ github.event.head_commit.timestamp }}
+            - **触发**: ${{ github.event_name }}
+
+            ### 下载
+            - **Debug APK**: 适用于开发和调试
+            - **Release APK**: 适用于安装使用（已混淆+签名）
+
+            > 由 GitHub Actions 自动构建
+          files: |
+            apks/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
