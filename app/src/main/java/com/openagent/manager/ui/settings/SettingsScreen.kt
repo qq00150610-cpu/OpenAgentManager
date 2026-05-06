@@ -98,7 +98,7 @@ fun SettingsScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("语言", style = MaterialTheme.typography.bodyLarge)
                 ExposedDropdownMenuBox(expanded = langExp, onExpandedChange = { langExp = !langExp }) {
-                    OutlinedTextField(language, {}, readOnly = true, modifier = Modifier.menuAnchor().width(120.dp),
+                    OutlinedTextField(language, {}, readOnly = true, modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true).width(120.dp),
                         textStyle = MaterialTheme.typography.bodyMedium)
                     ExposedDropdownMenu(expanded = langExp, onDismissRequest = { langExp = false }) {
                         DropdownMenuItem(text = { Text("中文") }, onClick = { language = "中文"; langExp = false })
