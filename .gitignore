@@ -20,3 +20,4 @@ local.properties
 *.swp
 *~
 # gradle/wrapper/gradle-wrapper.jar is tracked — needed for CI builds
+app/debug.keystore
