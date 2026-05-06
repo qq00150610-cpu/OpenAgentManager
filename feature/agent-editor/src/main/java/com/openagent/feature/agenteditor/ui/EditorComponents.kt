@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,7 +55,7 @@ fun EditorToolbar(
                 Spacer(Modifier.width(8.dp))
                 IconButton(onClick = onNew) { Icon(Icons.Default.Add, "新建") }
                 IconButton(onClick = onSave) { Icon(Icons.Default.Save, "保存") }
-                IconButton(onClick = onTemplates) { Icon(Icons.Default.LibraryBooks, "模板库") }
+                IconButton(onClick = onTemplates) { Icon(Icons.AutoMirrored.Filled.LibraryBooks, "模板库") }
             }
 
             Spacer(Modifier.height(8.dp))
@@ -72,7 +73,7 @@ fun EditorToolbar(
                         value = selectedLanguage.displayName, onValueChange = {}, readOnly = true,
                         label = { Text("语言") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(langExp) },
-                        modifier = Modifier.menuAnchor().width(130.dp),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true).width(130.dp),
                         textStyle = MaterialTheme.typography.bodySmall
                     )
                     ExposedDropdownMenu(expanded = langExp, onDismissRequest = { langExp = false }) {
@@ -91,7 +92,7 @@ fun EditorToolbar(
                         onValueChange = {}, readOnly = true,
                         label = { Text("目标") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(targetExp) },
-                        modifier = Modifier.menuAnchor().width(130.dp),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true).width(130.dp),
                         textStyle = MaterialTheme.typography.bodySmall
                     )
                     ExposedDropdownMenu(expanded = targetExp, onDismissRequest = { targetExp = false }) {
