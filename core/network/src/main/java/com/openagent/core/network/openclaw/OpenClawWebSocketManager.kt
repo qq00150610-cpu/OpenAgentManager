@@ -175,6 +175,7 @@ class OpenClawWebSocketManager @Inject constructor() {
         val connectReq = ConnectRequest(
             id = UUID.randomUUID().toString(),
             params = ConnectParams(
+                client = ClientInfo(),
                 auth = AuthInfo(token = authToken),
                 device = DeviceInfo(id = UUID.randomUUID().toString())
             )
