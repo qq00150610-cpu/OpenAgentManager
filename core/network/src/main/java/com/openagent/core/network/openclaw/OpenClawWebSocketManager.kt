@@ -152,14 +152,20 @@ class OpenClawWebSocketManager @Inject constructor() {
                 scope.launch { handleMessage(text) }
             }
 
-            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                webSocket.close(1000, null)
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 _connectionState.value = ConnectionStatus.DISCONNECTED
+                scope.launch { emitLog(LogLevel.INFO, "WebSocket", "连接已关闭: $reason") }
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(code, reason)
+                _connectionState.value = ConnectionStatus.DISCONNECTED
+                scope.launch { emitLog(LogLevel.INFO, "WebSocket", "连接关闭中: $reason") }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 _connectionState.value = ConnectionStatus.ERROR
-                emitLog(LogLevel.ERROR, "WebSocket", "连接失败: ${t.message}")
+                scope.launch { emitLog(LogLevel.ERROR, "WebSocket", "连接失败: ${t.message}") }
                 scheduleReconnect()
             }
         })

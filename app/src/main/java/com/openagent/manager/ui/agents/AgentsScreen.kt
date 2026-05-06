@@ -164,7 +164,7 @@ private fun AgentDetailScreen(agent: AgentInfo, onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         agent.capabilities.forEach { cap ->
-                            SuggestionChip(onClick = {}, label = { Text(cap) })
+                            AssistChip(onClick = {}, label = { Text(cap) })
                         }
                     }
                 }

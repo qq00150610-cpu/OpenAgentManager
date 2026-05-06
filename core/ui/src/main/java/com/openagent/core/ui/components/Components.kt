@@ -48,11 +48,11 @@ fun AgentTypeChip(type: AgentType, modifier: Modifier = Modifier) {
         AgentType.OPENCLAW -> "OpenClaw" to OpenClawBlue
         AgentType.OPENHERMES -> "Hermes" to HermesPurple
     }
-    SuggestionChip(
+    AssistChip(
         onClick = {},
         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
         modifier = modifier,
-        colors = SuggestionChipDefaults.suggestionChipColors(
+        colors = AssistChipDefaults.assistChipColors(
             containerColor = color.copy(alpha = 0.12f),
             labelColor = color
         )

@@ -25,7 +25,7 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-    implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
+    implementation(libs.okhttp.sse)
 
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)

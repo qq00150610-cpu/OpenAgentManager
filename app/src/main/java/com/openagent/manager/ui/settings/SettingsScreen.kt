@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.ExperimentalMaterial3Api
 import com.openagent.core.ui.components.DetailRow
 
 /**
@@ -27,6 +28,7 @@ import com.openagent.core.ui.components.DetailRow
  * 6. 关于
  */
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun SettingsScreen() {
     var gatewayUrl by remember { mutableStateOf("") }
     var gatewayToken by remember { mutableStateOf("") }

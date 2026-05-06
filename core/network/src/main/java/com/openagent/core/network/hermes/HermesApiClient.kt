@@ -2,13 +2,18 @@ package com.openagent.core.network.hermes
 
 import com.openagent.core.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
+import okhttp3.sse.EventSource
+import okhttp3.sse.EventSourceListener
+import okhttp3.sse.EventSources
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -81,9 +86,9 @@ class HermesApiClient @Inject constructor() {
         } catch (e: Exception) { Result.failure(e) }
     }
 
-    // ── 聊天请求 ─────────────────────────────
+    // ── 聊天请求 (SSE 流式) ───────────────────
 
-    suspend fun chat(request: ChatRequest): Flow<String> = flow {
+    suspend fun chat(request: ChatRequest): Flow<String> = callbackFlow {
         val url = when (apiMode) {
             ApiMode.CHAT_COMPLETIONS -> "$baseUrl/v1/chat/completions"
             ApiMode.CODEX_RESPONSES -> "$baseUrl/v1/responses"
@@ -116,11 +121,24 @@ class HermesApiClient @Inject constructor() {
             .post(body.toRequestBody("application/json".toMediaType()))
             .build()
 
-        val response = withContext(Dispatchers.IO) {
-            client.newCall(httpRequest).execute()
+        val factory = EventSources.createFactory(client)
+        val eventSource = factory.newEventSource(httpRequest, object : EventSourceListener() {
+            override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
+                trySend(data)
+            }
+            override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                if (response != null) {
+                    trySend(response.body?.string() ?: "")
+                }
+                close(t ?: IOException("SSE connection failed"))
+            }
+            override fun onClosed(eventSource: EventSource) {
+                close()
+            }
+        })
+        awaitClose {
+            eventSource.cancel()
         }
-        val responseBody = response.body?.string() ?: ""
-        emit(responseBody)
     }
 
     // ── 会话列表 ─────────────────────────────
