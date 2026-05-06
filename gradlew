@@ -113,7 +113,7 @@ fi
 
 # Collect all arguments for the java command, stracks://issues.gradle.org/browse/GRADLE-2360
 # are resolved.
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+DEFAULT_JVM_OPTS="-Xmx64m -Xms64m"
 
 # Collect all arguments for the java command;
 #   * $DEFAULT_JVM_OPTS, $JAVA_OPTS, and $GRADLE_OPTS can contain fragments of
