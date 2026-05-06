@@ -20,24 +20,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // ── Context ─────────────────────────────
-
-    @Provides
-    @Singleton
-    fun provideContext(@ApplicationContext context: Context): Context = context
-
-    // ── DataStore ───────────────────────────
-
-    @Provides
-    @Singleton
-    fun provideSettingsDataStore(context: Context): SettingsDataStore =
-        SettingsDataStore(context)
-
     // ── Room Database ───────────────────────
 
     @Provides
     @Singleton
-    fun provideAppDatabase(context: Context): AppDatabase =
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "openagent_db").build()
 
     @Provides
