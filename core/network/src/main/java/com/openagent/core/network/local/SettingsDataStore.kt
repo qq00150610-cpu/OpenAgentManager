@@ -30,6 +30,9 @@ class SettingsDataStore @Inject constructor(
         val BIOMETRIC = booleanPreferencesKey("biometric")
         val ENCRYPTION = booleanPreferencesKey("encryption")
         val LANGUAGE = stringPreferencesKey("language")
+        val FREE_API_PROVIDER = stringPreferencesKey("free_api_provider")
+        val FREE_API_KEY = stringPreferencesKey("free_api_key")
+        val FREE_API_MODEL = stringPreferencesKey("free_api_model")
     }
 
     val gatewayUrl: Flow<String> = context.dataStore.data.map { it[OC_GATEWAY_URL] ?: "" }
@@ -51,4 +54,13 @@ class SettingsDataStore @Inject constructor(
     suspend fun saveBiometric(v: Boolean) { context.dataStore.edit { it[BIOMETRIC] = v } }
     suspend fun saveEncryption(v: Boolean) { context.dataStore.edit { it[ENCRYPTION] = v } }
     suspend fun saveLanguage(v: String) { context.dataStore.edit { it[LANGUAGE] = v } }
+
+    // ── 免费 API 提供商 ──────────────────
+    val selectedFreeProvider: Flow<String> = context.dataStore.data.map { it[FREE_API_PROVIDER] ?: "" }
+    val freeApiKey: Flow<String> = context.dataStore.data.map { it[FREE_API_KEY] ?: "" }
+    val freeApiModel: Flow<String> = context.dataStore.data.map { it[FREE_API_MODEL] ?: "" }
+
+    suspend fun saveSelectedFreeProvider(v: String) { context.dataStore.edit { it[FREE_API_PROVIDER] = v } }
+    suspend fun saveFreeApiKey(v: String) { context.dataStore.edit { it[FREE_API_KEY] = v } }
+    suspend fun saveFreeApiModel(v: String) { context.dataStore.edit { it[FREE_API_MODEL] = v } }
 }

@@ -1,10 +1,13 @@
 package com.openagent.manager.ui.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +17,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.openagent.core.model.*
 import com.openagent.core.ui.components.DetailRow
+import com.openagent.feature.openhermes.viewmodel.HermesViewModel
 
 /**
  * 设置页面
@@ -29,7 +35,9 @@ import com.openagent.core.ui.components.DetailRow
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun SettingsScreen() {
+fun SettingsScreen(
+    hermesVm: HermesViewModel = hiltViewModel()
+) {
     var gatewayUrl by remember { mutableStateOf("") }
     var gatewayToken by remember { mutableStateOf("") }
     var hermesUrl by remember { mutableStateOf("") }
@@ -38,6 +46,14 @@ fun SettingsScreen() {
     var isBiometric by remember { mutableStateOf(false) }
     var isEncryption by remember { mutableStateOf(false) }
     var language by remember { mutableStateOf("中文") }
+    
+    // 免费 API 提供商相关状态
+    var showFreeApiSelector by remember { mutableStateOf(false) }
+    var selectedProviderId by remember { mutableStateOf("") }
+    var freeApiKeyInput by remember { mutableStateOf("") }
+    var selectedModel by remember { mutableStateOf("") }
+    var showModelSelector by remember { mutableStateOf(false) }
+    var configSuccess by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -46,6 +62,148 @@ fun SettingsScreen() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // ═══════════════════════════════════════════
+        //  免费 API 提供商配置（新增 - 最上面，最醒目）
+        // ═══════════════════════════════════════════
+        SettingsSection("🎯 免费 AI API 快速配置", Icons.Default.RocketLaunch) {
+            Text(
+                "一键配置免费 AI 模型 API，无需自建服务器",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
+
+            // 已选择的提供商
+            val selectedProvider = FREE_API_PROVIDERS.find { it.id == selectedProviderId }
+            
+            if (selectedProvider != null) {
+                // 已选择提供商时的状态展示
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CheckCircle, null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(selectedProvider.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text(selectedProvider.description,
+                            style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(4.dp))
+                        Text("API 地址: ${selectedProvider.baseUrl}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // 选择提供商按钮
+            OutlinedButton(
+                onClick = { showFreeApiSelector = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.List, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(if (selectedProvider == null) "选择免费 API 提供商" else "切换提供商")
+            }
+
+            if (selectedProvider != null) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = freeApiKeyInput,
+                    onValueChange = { freeApiKeyInput = it },
+                    label = { Text("${selectedProvider.name} API Key") },
+                    placeholder = { Text(selectedProvider.apiKeyHint) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(Modifier.height(8.dp))
+
+                // 模型选择
+                OutlinedButton(
+                    onClick = { showModelSelector = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.SmartToy, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(if (selectedModel.isEmpty()) "选择模型" else "模型: $selectedModel")
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // 应用配置按钮
+                Button(
+                    onClick = {
+                        hermesVm.configure(selectedProvider.baseUrl, freeApiKeyInput)
+                        hermesVm.testConnection()
+                        configSuccess = "已应用 ${selectedProvider.name} 配置，开始测试连接..."
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = freeApiKeyInput.isNotBlank()
+                ) {
+                    Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("应用并测试连接")
+                }
+
+                // 打开官网
+                if (selectedProvider.officialSite.isNotBlank()) {
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInBrowser, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("前往 ${selectedProvider.name} 官网获取 API Key", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
+            // 配置成功提示
+            configSuccess?.let { msg ->
+                Spacer(Modifier.height(8.dp))
+                Text(msg, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        // ── 免费 API 提供商选择弹窗 ──────
+        if (showFreeApiSelector) {
+            FreeApiProviderDialog(
+                onDismiss = { showFreeApiSelector = false },
+                onSelect = { provider ->
+                    selectedProviderId = provider.id
+                    freeApiKeyInput = ""
+                    selectedModel = provider.models.firstOrNull() ?: ""
+                    showFreeApiSelector = false
+                    configSuccess = null
+                }
+            )
+        }
+
+        // ── 模型选择弹窗 ──────
+        if (showModelSelector) {
+            val provider = FREE_API_PROVIDERS.find { it.id == selectedProviderId }
+            if (provider != null && provider.models.isNotEmpty()) {
+                ModelSelectionDialog(
+                    models = provider.models,
+                    currentModel = selectedModel,
+                    onDismiss = { showModelSelector = false },
+                    onSelect = { model ->
+                        selectedModel = model
+                        showModelSelector = false
+                    }
+                )
+            }
+        }
+
         // ── API 连接配置 ─────────────────
         SettingsSection("API 连接配置", Icons.Default.Cloud) {
             OutlinedTextField(gatewayUrl, { gatewayUrl = it },
@@ -175,4 +333,129 @@ private fun SettingsSection(
             content()
         }
     }
+}
+
+// ═══════════════════════════════════════════
+//  免费 API 提供商选择弹窗
+// ═══════════════════════════════════════════
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun FreeApiProviderDialog(
+    onDismiss: () -> Unit,
+    onSelect: (FreeApiProvider) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.RocketLaunch, null, tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("选择免费 API 提供商")
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("以下是精选的 10 个免费 AI API 提供商，支持 OpenAI 兼容格式：",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+                
+                FREE_API_PROVIDERS.forEach { provider ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(provider) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(provider.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f))
+                                AssistChip(
+                                    onClick = {},
+                                    label = { Text("免费", style = MaterialTheme.typography.labelSmall) },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                )
+                            }
+                            Spacer(Modifier.height(2.dp))
+                            Text(provider.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("地址: ${provider.baseUrl}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
+}
+
+// ═══════════════════════════════════════════
+//  模型选择弹窗
+// ═══════════════════════════════════════════
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun ModelSelectionDialog(
+    models: List<String>,
+    currentModel: String,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.SmartToy, null, tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("选择模型")
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                models.forEach { model ->
+                    val isSelected = model == currentModel
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(model) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isSelected) {
+                                Icon(Icons.Default.CheckCircle, null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                            }
+                            Text(model, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
 }
