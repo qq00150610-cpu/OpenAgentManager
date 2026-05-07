@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -159,7 +158,7 @@ fun SettingsScreen(
                 if (selectedProvider.officialSite.isNotBlank()) {
                     Spacer(Modifier.height(4.dp))
                     TextButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.AutoMirrored.Filled.OpenInBrowser, null, Modifier.size(16.dp))
+                        Icon(Icons.Default.Language, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("前往 ${selectedProvider.name} 官网获取 API Key", style = MaterialTheme.typography.bodySmall)
                     }
